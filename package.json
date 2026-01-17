@@ -1,0 +1,26 @@
+{
+  "name": "key-verification-system",
+  "version": "1.0.0",
+  "description": "Discord Key Verification System",
+  "main": "bot/index.js",
+  "scripts": {
+    "start": "node bot/index.js",
+    "web": "node website/server.js",
+    "dev": "node bot/index.js"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "verification"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mongodb": "^7.0.0",
+    "mongoose": "^8.0.3",
+    "nanoid": "^3.3.7"
+  }
+}
