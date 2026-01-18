@@ -326,9 +326,14 @@ process.on('SIGTERM', () => {
 
 // Login to Discord
 console.log('🔄 Attempting to login to Discord...');
+console.log('🔑 Token present:', !!process.env.DISCORD_TOKEN);
+console.log('🔑 Token length:', process.env.DISCORD_TOKEN ? process.env.DISCORD_TOKEN.length : 0);
+
 client.login(process.env.DISCORD_TOKEN)
   .then(() => console.log('✅ Discord login successful'))
   .catch(err => {
-    console.error('❌ Discord login failed:', err);
+    console.error('❌ Discord login failed:', err.message);
+    console.error('❌ Error code:', err.code);
+    console.error('❌ Full error:', err);
     process.exit(1);
   });
