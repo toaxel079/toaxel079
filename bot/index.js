@@ -1,9 +1,58 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, PermissionFlagsBits } = require('discord.js');
 const mongoose = require('mongoose');
+const express = require('express');
 const Key = require('../models/Key');
 const GuildConfig = require('../models/GuildConfig');
 
+// ============================================
+// EXPRESS SERVER SETUP (MUST BE FIRST!)
+// ============================================
+const app = express();
+const PORT = process.env.PORT || 10000;
+
+app.use(express.json());
+
+app.get('/', (req, res) => {
+  res.json({
+    status: 'Bot is running!',
+    uptime: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+    bot: client.user ? client.user.tag : 'Connecting...'
+  });
+});
+
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    bot: client.user ? client.user.tag : 'Connecting...',
+    guilds: client.guilds ? client.guilds.cache.size : 0,
+    uptime: Math.floor(process.uptime()),
+    memory: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + ' MB'
+  });
+});
+
+app.get('/ping', (req, res) => {
+  res.send('Pong!');
+});
+
+// START EXPRESS SERVER IMMEDIATELY
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🌐 Keep-alive server running on port ${PORT}`);
+  console.log(`🔗 Server is listening on 0.0.0.0:${PORT}`);
+});
+
+// Handle server errors
+server.on('error', (error) => {
+  console.error('❌ Server error:', error);
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use`);
+  }
+});
+
+// ============================================
+// DISCORD BOT SETUP
+// ============================================
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -21,7 +70,8 @@ mongoose.connect(process.env.MONGO_URI)
 // Bot ready event
 client.once('ready', () => {
   console.log(`✅ Bot is online as ${client.user.tag}`);
-  client.user.setActivity('!setup to configure', { type: 'WATCHING' });
+  console.log(`📊 Serving ${client.guilds.cache.size} servers`);
+  client.user.setActivity('!setup to configure', { type: 3 }); // Type 3 = WATCHING
 });
 
 // Message handler for !setup command
@@ -264,5 +314,21 @@ process.on('unhandledRejection', error => {
   console.error('Unhandled promise rejection:', error);
 });
 
-// Login
-client.login(process.env.DISCORD_TOKEN);
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, closing server...');
+  server.close(() => {
+    console.log('Server closed');
+    client.destroy();
+    process.exit(0);
+  });
+});
+
+// Login to Discord
+console.log('🔄 Attempting to login to Discord...');
+client.login(process.env.DISCORD_TOKEN)
+  .then(() => console.log('✅ Discord login successful'))
+  .catch(err => {
+    console.error('❌ Discord login failed:', err);
+    process.exit(1);
+  });
