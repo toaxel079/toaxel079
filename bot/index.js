@@ -74,6 +74,30 @@ client.once('ready', () => {
   client.user.setActivity('!setup to configure', { type: 3 }); // Type 3 = WATCHING
 });
 
+// Handle all Discord errors
+client.on('shardError', error => {
+  console.error('❌ Websocket error:', error);
+});
+
+client.on('shardDisconnect', (event, id) => {
+  console.log(`⚠️ Shard ${id} disconnected`, event);
+});
+
+client.on('shardReconnecting', id => {
+  console.log(`🔄 Shard ${id} reconnecting...`);
+});
+
+client.on('warn', info => {
+  console.warn('⚠️ Discord warning:', info);
+});
+
+client.on('debug', info => {
+  // Only log important debug info
+  if (info.includes('Session') || info.includes('Ready') || info.includes('Heartbeat')) {
+    console.log('🐛 Discord debug:', info);
+  }
+});
+
 // Message handler for !setup command
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
